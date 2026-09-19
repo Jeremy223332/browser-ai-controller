@@ -1,10 +1,16 @@
+chrome.sidePanel.setPanelBehavior({
+  openPanelOnActionClick: true
+}).catch((error) => {
+  console.error("Side panel error:", error);
+});
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type !== "AI_COMMAND") {
     return;
   }
 
   handleCommand(message.command)
-    .then(result => sendResponse(result))
+    .then(sendResponse)
     .catch(error => {
       console.error(error);
 
@@ -23,35 +29,21 @@ async function handleCommand(command) {
   if (!text) {
     return {
       success: false,
-      message: "No command was provided."
+      message: "Please enter a command."
     };
   }
 
-  const lower = text.toLowerCase();
-
-  // -----------------------------
   // GOOGLE SEARCH
-  // -----------------------------
+  const googleMatch = text.match(
+    /^search\s+google(?:\s+for)?\s+(.+)$/i
+  );
 
-  if (
-    lower.startsWith("search google for ") ||
-    lower.startsWith("search google ")
-  ) {
-    const searchText = text
-      .replace(/^search google for /i, "")
-      .replace(/^search google /i, "")
-      .trim();
-
-    if (!searchText) {
-      return {
-        success: false,
-        message: "What should I search for?"
-      };
-    }
+  if (googleMatch) {
+    const search = googleMatch[1].trim();
 
     const url =
       "https://www.google.com/search?q=" +
-      encodeURIComponent(searchText);
+      encodeURIComponent(search);
 
     await chrome.tabs.create({
       url: url
@@ -59,33 +51,21 @@ async function handleCommand(command) {
 
     return {
       success: true,
-      message: `Opening Google and searching for "${searchText}".`
+      message: `Searching Google for "${search}".`
     };
   }
 
-  // -----------------------------
   // YOUTUBE SEARCH
-  // -----------------------------
+  const youtubeMatch = text.match(
+    /^search\s+youtube(?:\s+for)?\s+(.+)$/i
+  );
 
-  if (
-    lower.startsWith("search youtube for ") ||
-    lower.startsWith("search youtube ")
-  ) {
-    const searchText = text
-      .replace(/^search youtube for /i, "")
-      .replace(/^search youtube /i, "")
-      .trim();
-
-    if (!searchText) {
-      return {
-        success: false,
-        message: "What should I search for on YouTube?"
-      };
-    }
+  if (youtubeMatch) {
+    const search = youtubeMatch[1].trim();
 
     const url =
       "https://www.youtube.com/results?search_query=" +
-      encodeURIComponent(searchText);
+      encodeURIComponent(search);
 
     await chrome.tabs.create({
       url: url
@@ -93,31 +73,22 @@ async function handleCommand(command) {
 
     return {
       success: true,
-      message: `Opening YouTube and searching for "${searchText}".`
+      message: `Searching YouTube for "${search}".`
     };
   }
 
-  // -----------------------------
   // OPEN WEBSITE
-  // -----------------------------
+  const openMatch = text.match(
+    /^(?:open|go to)\s+(.+)$/i
+  );
 
-  if (
-    lower.startsWith("open ") ||
-    lower.startsWith("go to ")
-  ) {
-    let site = text
-      .replace(/^open /i, "")
-      .replace(/^go to /i, "")
-      .trim();
+  if (openMatch) {
+    let site = openMatch[1].trim();
 
-    if (!site) {
-      return {
-        success: false,
-        message: "Which website should I open?"
-      };
-    }
-
-    if (!site.startsWith("http://") && !site.startsWith("https://")) {
+    if (
+      !site.startsWith("http://") &&
+      !site.startsWith("https://")
+    ) {
       site = "https://" + site;
     }
 
@@ -131,11 +102,11 @@ async function handleCommand(command) {
     };
   }
 
-  // -----------------------------
-  // CURRENT TAB
-  // -----------------------------
-
-  if (lower === "reload page" || lower === "refresh page") {
+  // REFRESH CURRENT PAGE
+  if (
+    /^refresh page$/i.test(text) ||
+    /^reload page$/i.test(text)
+  ) {
     const tabs = await chrome.tabs.query({
       active: true,
       currentWindow: true
@@ -152,17 +123,12 @@ async function handleCommand(command) {
 
     return {
       success: true,
-      message: "Reloading the current page."
+      message: "Refreshing the current page."
     };
   }
 
-  // -----------------------------
-  // UNKNOWN COMMAND
-  // -----------------------------
-
   return {
     success: false,
-    message:
-      "I don't know how to do that yet. Try a Google search, YouTube search, opening a website, or refreshing the page."
+    message: `I don't know how to perform "${text}" yet.`
   };
 }
