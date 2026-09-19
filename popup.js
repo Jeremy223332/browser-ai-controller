@@ -1,4 +1,4 @@
-\const commandBox = document.getElementById("command");
+const commandBox = document.getElementById("command");
 const runButton = document.getElementById("run");
 const status = document.getElementById("status");
 
@@ -25,7 +25,6 @@ runButton.addEventListener("click", async () => {
   }
 
   clearStatus();
-
   showStatus("🤖 Understanding command...");
 
   try {
@@ -43,9 +42,6 @@ runButton.addEventListener("click", async () => {
     }
   } catch (error) {
     console.error(error);
-
-    showStatus(
-      "❌ Browser controller error."
-    );
+    showStatus("❌ Browser controller error.");
   }
 });
