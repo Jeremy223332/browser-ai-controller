@@ -1,16 +1,32 @@
-const commandBox = document.getElementById("command");
+\const commandBox = document.getElementById("command");
 const runButton = document.getElementById("run");
 const status = document.getElementById("status");
+
+function showStatus(message, type = "working") {
+  const line = document.createElement("div");
+  line.className = `action ${type}`;
+  line.textContent = message;
+
+  status.appendChild(line);
+  status.scrollTop = status.scrollHeight;
+}
+
+function clearStatus() {
+  status.innerHTML = "";
+}
 
 runButton.addEventListener("click", async () => {
   const command = commandBox.value.trim();
 
   if (!command) {
-    status.textContent = "⚠️ Enter a command first.";
+    clearStatus();
+    showStatus("⚠️ Enter a command first.");
     return;
   }
 
-  status.textContent = "🤖 Processing command...";
+  clearStatus();
+
+  showStatus("🤖 Understanding command...");
 
   try {
     const response = await chrome.runtime.sendMessage({
@@ -19,13 +35,17 @@ runButton.addEventListener("click", async () => {
     });
 
     if (response && response.success) {
-      status.textContent = "✅ " + response.message;
+      showStatus("✓ " + response.message, "success");
     } else {
-      status.textContent =
-        "❌ " + (response?.message || "Something went wrong.");
+      showStatus(
+        "❌ " + (response?.message || "Something went wrong.")
+      );
     }
   } catch (error) {
     console.error(error);
-    status.textContent = "❌ Could not contact the browser controller.";
+
+    showStatus(
+      "❌ Browser controller error."
+    );
   }
 });
