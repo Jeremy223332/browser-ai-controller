@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Browser AI Controller",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "AI assistant that can control Chrome and perform browser actions.",
   "permissions": [
     "tabs",
@@ -15,7 +15,8 @@
     "https://www.google.com/*"
   ],
   "action": {
-    "default_title": "Open Browser AI"
+    "default_title": "Browser AI",
+    "default_icon": {}
   },
   "side_panel": {
     "default_path": "popup.html"
