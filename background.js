@@ -12,7 +12,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
   handleCommand(message.command)
     .then(sendResponse)
-    .catch(error => {
+    .catch((error) => {
       console.error(error);
 
       sendResponse({
@@ -76,7 +76,7 @@ async function handleCommand(command) {
 
     return {
       success: true,
-      message: `Searching Google for "${search}".`
+      message: 'Searching Google for "' + search + '".'
     };
   }
 
@@ -98,7 +98,7 @@ async function handleCommand(command) {
 
     return {
       success: true,
-      message: `Searching YouTube for "${search}".`
+      message: 'Searching YouTube for "' + search + '".'
     };
   }
 
@@ -134,8 +134,8 @@ async function handleCommand(command) {
       };
     }
 
-    // FIND TAB MATCHING THE NAME
-    const matchingTab = tabs.find(tab => {
+    // FIND MATCHING TAB
+    const matchingTab = tabs.find((tab) => {
       const title = (tab.title || "").toLowerCase();
       const url = (tab.url || "").toLowerCase();
 
@@ -148,7 +148,7 @@ async function handleCommand(command) {
     if (!matchingTab) {
       return {
         success: false,
-        message: `I couldn't find a tab for "${closeMatch[1].trim()}".`
+        message: 'I could not find a tab for "' + closeMatch[1].trim() + '".'
       };
     }
 
@@ -156,7 +156,7 @@ async function handleCommand(command) {
 
     return {
       success: true,
-      message: `Closed ${closeMatch[1].trim()}.`
+      message: "Closed " + closeMatch[1].trim() + "."
     };
   }
 
@@ -181,7 +181,7 @@ async function handleCommand(command) {
 
     return {
       success: true,
-      message: `Opening ${site}`
+      message: "Opening " + site
     };
   }
 
@@ -212,7 +212,7 @@ async function handleCommand(command) {
 
   return {
     success: false,
-    message: `I don't know how to perform "${text}" yet.`
+    message: 'I do not know how to perform "' + text + '" yet.'
   };
 }
 ```
