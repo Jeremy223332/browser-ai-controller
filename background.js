@@ -1,3 +1,4 @@
+```js
 chrome.sidePanel.setPanelBehavior({
   openPanelOnActionClick: true
 }).catch((error) => {
@@ -101,6 +102,64 @@ async function handleCommand(command) {
     };
   }
 
+  // CLOSE WEBSITE / TAB
+  const closeMatch = text.match(
+    /^close\s+(.+)$/i
+  );
+
+  if (closeMatch) {
+    const target = closeMatch[1].trim().toLowerCase();
+
+    const tabs = await chrome.tabs.query({});
+
+    // CLOSE CURRENT TAB
+    if (target === "this tab" || target === "current tab") {
+      const currentTabs = await chrome.tabs.query({
+        active: true,
+        currentWindow: true
+      });
+
+      if (!currentTabs.length) {
+        return {
+          success: false,
+          message: "No active tab found."
+        };
+      }
+
+      await chrome.tabs.remove(currentTabs[0].id);
+
+      return {
+        success: true,
+        message: "Closed the current tab."
+      };
+    }
+
+    // FIND TAB MATCHING THE NAME
+    const matchingTab = tabs.find(tab => {
+      const title = (tab.title || "").toLowerCase();
+      const url = (tab.url || "").toLowerCase();
+
+      return (
+        title.includes(target) ||
+        url.includes(target)
+      );
+    });
+
+    if (!matchingTab) {
+      return {
+        success: false,
+        message: `I couldn't find a tab for "${closeMatch[1].trim()}".`
+      };
+    }
+
+    await chrome.tabs.remove(matchingTab.id);
+
+    return {
+      success: true,
+      message: `Closed ${closeMatch[1].trim()}.`
+    };
+  }
+
   // OPEN WEBSITE
   const openMatch = text.match(
     /^(?:open|go to)\s+(.+)$/i
@@ -156,3 +215,4 @@ async function handleCommand(command) {
     message: `I don't know how to perform "${text}" yet.`
   };
 }
+```
