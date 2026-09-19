@@ -3,56 +3,166 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return;
   }
 
-  const command = message.command.toLowerCase();
+  handleCommand(message.command)
+    .then(result => sendResponse(result))
+    .catch(error => {
+      console.error(error);
 
-  if (command.includes("youtube")) {
-    const searchText = extractYouTubeSearch(command);
-
-    if (!searchText) {
       sendResponse({
         success: false,
-        message: "I couldn't figure out what to search for."
+        message: error.message || "Something went wrong."
       });
-      return;
+    });
+
+  return true;
+});
+
+async function handleCommand(command) {
+  const text = command.trim();
+
+  if (!text) {
+    return {
+      success: false,
+      message: "No command was provided."
+    };
+  }
+
+  const lower = text.toLowerCase();
+
+  // -----------------------------
+  // GOOGLE SEARCH
+  // -----------------------------
+
+  if (
+    lower.startsWith("search google for ") ||
+    lower.startsWith("search google ")
+  ) {
+    const searchText = text
+      .replace(/^search google for /i, "")
+      .replace(/^search google /i, "")
+      .trim();
+
+    if (!searchText) {
+      return {
+        success: false,
+        message: "What should I search for?"
+      };
+    }
+
+    const url =
+      "https://www.google.com/search?q=" +
+      encodeURIComponent(searchText);
+
+    await chrome.tabs.create({
+      url: url
+    });
+
+    return {
+      success: true,
+      message: `Opening Google and searching for "${searchText}".`
+    };
+  }
+
+  // -----------------------------
+  // YOUTUBE SEARCH
+  // -----------------------------
+
+  if (
+    lower.startsWith("search youtube for ") ||
+    lower.startsWith("search youtube ")
+  ) {
+    const searchText = text
+      .replace(/^search youtube for /i, "")
+      .replace(/^search youtube /i, "")
+      .trim();
+
+    if (!searchText) {
+      return {
+        success: false,
+        message: "What should I search for on YouTube?"
+      };
     }
 
     const url =
       "https://www.youtube.com/results?search_query=" +
       encodeURIComponent(searchText);
 
-    chrome.tabs.create({ url }, () => {
-      sendResponse({
-        success: true,
-        message: `Opening YouTube and searching for "${searchText}"...`
-      });
+    await chrome.tabs.create({
+      url: url
     });
 
-    return true;
+    return {
+      success: true,
+      message: `Opening YouTube and searching for "${searchText}".`
+    };
   }
 
-  sendResponse({
-    success: false,
-    message: "I don't know how to perform that action yet."
-  });
-});
+  // -----------------------------
+  // OPEN WEBSITE
+  // -----------------------------
 
-function extractYouTubeSearch(command) {
-  const patterns = [
-    /search youtube for (.+)/i,
-    /search youtube (.+)/i,
-    /find (.+) on youtube/i,
-    /look up (.+) on youtube/i
-  ];
+  if (
+    lower.startsWith("open ") ||
+    lower.startsWith("go to ")
+  ) {
+    let site = text
+      .replace(/^open /i, "")
+      .replace(/^go to /i, "")
+      .trim();
 
-  for (const pattern of patterns) {
-    const match = command.match(pattern);
-
-    if (match) {
-      return match[1]
-        .replace(/\s+and\s+play.*$/i, "")
-        .trim();
+    if (!site) {
+      return {
+        success: false,
+        message: "Which website should I open?"
+      };
     }
+
+    if (!site.startsWith("http://") && !site.startsWith("https://")) {
+      site = "https://" + site;
+    }
+
+    await chrome.tabs.create({
+      url: site
+    });
+
+    return {
+      success: true,
+      message: `Opening ${site}`
+    };
   }
 
-  return null;
+  // -----------------------------
+  // CURRENT TAB
+  // -----------------------------
+
+  if (lower === "reload page" || lower === "refresh page") {
+    const tabs = await chrome.tabs.query({
+      active: true,
+      currentWindow: true
+    });
+
+    if (!tabs.length) {
+      return {
+        success: false,
+        message: "No active tab found."
+      };
+    }
+
+    await chrome.tabs.reload(tabs[0].id);
+
+    return {
+      success: true,
+      message: "Reloading the current page."
+    };
+  }
+
+  // -----------------------------
+  // UNKNOWN COMMAND
+  // -----------------------------
+
+  return {
+    success: false,
+    message:
+      "I don't know how to do that yet. Try a Google search, YouTube search, opening a website, or refreshing the page."
+  };
 }
