@@ -7,14 +7,18 @@
     "tabs",
     "activeTab",
     "scripting",
-    "storage"
+    "storage",
+    "sidePanel"
   ],
   "host_permissions": [
     "https://www.youtube.com/*",
     "https://www.google.com/*"
   ],
   "action": {
-    "default_popup": "popup.html"
+    "default_title": "Open Browser AI"
+  },
+  "side_panel": {
+    "default_path": "popup.html"
   },
   "background": {
     "service_worker": "background.js"
