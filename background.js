@@ -33,6 +33,30 @@ async function handleCommand(command) {
     };
   }
 
+  // OPEN YOUTUBE
+  if (/^(open|go to)\s+youtube$/i.test(text)) {
+    await chrome.tabs.create({
+      url: "https://www.youtube.com/"
+    });
+
+    return {
+      success: true,
+      message: "Opening YouTube."
+    };
+  }
+
+  // OPEN GOOGLE
+  if (/^(open|go to)\s+google$/i.test(text)) {
+    await chrome.tabs.create({
+      url: "https://www.google.com/"
+    });
+
+    return {
+      success: true,
+      message: "Opening Google."
+    };
+  }
+
   // GOOGLE SEARCH
   const googleMatch = text.match(
     /^search\s+google(?:\s+for)?\s+(.+)$/i
